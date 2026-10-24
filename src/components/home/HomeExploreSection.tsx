@@ -60,7 +60,7 @@ export const HomeExploreSection: React.FC<HomeExploreSectionProps> = ({
           <div className="lg:col-span-7 space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold text-amber-100 border border-white/25">
               <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-              <span>Avventura Didattica per Bambini</span>
+              <span>Avventura per Giovani Matematici</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white font-display text-balance">
@@ -102,7 +102,7 @@ export const HomeExploreSection: React.FC<HomeExploreSectionProps> = ({
             <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border-4 border-white/30 group">
               <img
                 src="/src/assets/images/hero_math_adventure_1792238943381.jpg"
-                alt="Matemagica paesaggio avventuroso per bambini"
+                alt="Matemagica paesaggio avventuroso per giovani matematici"
                 referrerPolicy="no-referrer"
                 className="w-full aspect-16/10 object-cover transform group-hover:scale-102 transition-transform duration-500"
               />
