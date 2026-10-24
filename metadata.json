@@ -1,0 +1,6 @@
+{
+  "name": "Matemagica: Il Regno delle Proprietà",
+  "description": "App ludico-educativa per bambini per imparare le proprietà delle 4 operazioni matematiche con minigiochi interattivi, avatar personalizzabile, videolezioni animate, livelli e badge.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
