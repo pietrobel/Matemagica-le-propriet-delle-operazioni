@@ -282,3 +282,47 @@ export const ALL_PROPERTY_QUIZ_QUESTIONS: PropertyQuizQuestion[] = [
     ruleHint: 'Non si può distribuire un oggetto a zero persone!'
   }
 ];
+
+export function generatePropertyQuizQuestions(): PropertyQuizQuestion[] {
+  const questions: PropertyQuizQuestion[] = JSON.parse(JSON.stringify(ALL_PROPERTY_QUIZ_QUESTIONS));
+
+  // 1. Commutativa Addizione
+  const a1 = Math.floor(Math.random() * 30) + 25;
+  const b1 = Math.floor(Math.random() * 35) + 35;
+  questions[0].equation = `${a1} + ${b1} = ${b1} + ${a1} = ${a1 + b1}`;
+
+  // 2. Associativa Addizione
+  const a2 = Math.floor(Math.random() * 8) + 12;
+  const b2 = 20 - a2;
+  const c2 = Math.floor(Math.random() * 25) + 20;
+  questions[1].equation = `(${a2} + ${b2}) + ${c2} = ${a2} + (${b2} + ${c2}) = ${20 + c2}`;
+
+  // 4. Elemento neutro addizione
+  const a4 = Math.floor(Math.random() * 80) + 75;
+  questions[3].equation = `${a4} + 0 = ${a4}`;
+
+  // 5. Invariantiva add
+  const delta5 = Math.floor(Math.random() * 2) + 1;
+  const b5 = 30 - delta5;
+  const a5 = b5 + Math.floor(Math.random() * 25) + 25;
+  questions[4].equation = `${a5} - ${b5} = (${a5} + ${delta5}) - (${b5} + ${delta5}) = ${a5 + delta5} - 30 = ${a5 - b5}`;
+
+  // 8. Commutativa moltiplicazione
+  const a8 = Math.floor(Math.random() * 5) + 6;
+  const b8 = Math.floor(Math.random() * 6) + 11;
+  questions[7].equation = `${a8} × ${b8} = ${b8} × ${a8} = ${a8 * b8}`;
+
+  // 11. Neutro moltiplicazione
+  const a11 = Math.floor(Math.random() * 80) + 55;
+  questions[10].equation = `${a11} × 1 = ${a11}`;
+
+  // 12. Assorbente zero
+  const a12 = Math.floor(Math.random() * 80) + 45;
+  questions[11].equation = `${a12} × 0 = 0`;
+
+  // 16. Div zero
+  const a16 = Math.floor(Math.random() * 40) + 12;
+  questions[15].equation = `${a16} ÷ 0 = IMPOSSIBILE`;
+
+  return questions;
+}

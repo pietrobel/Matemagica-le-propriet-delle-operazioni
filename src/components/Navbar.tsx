@@ -1,12 +1,29 @@
 import React from 'react';
-import { AvatarConfig } from '../types/math';
+import { AvatarConfig, MainTab } from '../types/math';
 import { AvatarRenderer } from './avatar/AvatarRenderer';
 import { soundManager } from '../utils/audio';
-import { Sparkles, Volume2, VolumeX, Palette } from 'lucide-react';
+import { 
+  Sparkles, 
+  Volume2, 
+  VolumeX, 
+  Palette, 
+  FlaskConical, 
+  ExternalLink,
+  BookOpen,
+  Video,
+  Dumbbell,
+  Gamepad2,
+  FileCheck2,
+  FileText,
+  Zap,
+  Home,
+  Menu,
+  X
+} from 'lucide-react';
 
 interface NavbarProps {
-  currentTab: 'esplora' | 'imparo' | 'minigiochi' | 'trofei' | 'classifica';
-  onSelectTab: (tab: 'esplora' | 'imparo' | 'minigiochi' | 'trofei' | 'classifica') => void;
+  currentTab: MainTab;
+  onSelectTab: (tab: MainTab) => void;
   avatarConfig: AvatarConfig;
   userLevel: number;
   xp: number;
@@ -25,82 +42,77 @@ export const Navbar: React.FC<NavbarProps> = ({
   soundEnabled,
   onToggleSound
 }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+  const navItems: { tab: MainTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { tab: 'home', label: 'Home', icon: Home },
+    { tab: 'imparo', label: '1. Imparo', icon: BookOpen },
+    { tab: 'guardo', label: '2. Guardo', icon: Video },
+    { tab: 'esercito', label: '3. Mi Esercito', icon: Dumbbell },
+    { tab: 'gioco', label: '4. Gioco', icon: Gamepad2 },
+    { tab: 'prova', label: '5. Mi Metto alla Prova', icon: FileCheck2 },
+    { tab: 'ripasso', label: '6. Ripasso', icon: FileText },
+    { tab: 'neutri', label: 'Neutri & Assorbenti', icon: Zap }
+  ];
+
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-200/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-8">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-200/80 shadow-2xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
         
-        {/* Zone 1: Single Text Element Wordmark */}
-        <button
-          onClick={() => {
-            soundManager.playPop();
-            onSelectTab('esplora');
-          }}
-          className="text-xl md:text-2xl font-black tracking-tight text-amber-600 hover:text-amber-700 transition-colors whitespace-nowrap shrink-0 text-left font-display"
-        >
-          Matemagica
-        </button>
-
-        {/* Zone 2: 4-5 clean single-line text navigation links with subtle hover state */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
+        {/* Left: Brand Wordmark + External ScienzaLab Button */}
+        <div className="flex items-center gap-3 shrink-0">
           <button
-            onClick={() => { soundManager.playPop(); onSelectTab('esplora'); }}
-            className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 ${
-              currentTab === 'esplora'
-                ? 'text-amber-700 border-amber-500 font-bold'
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
+            onClick={() => {
+              soundManager.playPop();
+              onSelectTab('home');
+            }}
+            className="text-xl sm:text-2xl font-black tracking-tight text-amber-600 hover:text-amber-700 transition-colors whitespace-nowrap text-left font-display flex items-center gap-1.5"
           >
-            Esplora
-          </button>
-          
-          <button
-            onClick={() => { soundManager.playPop(); onSelectTab('imparo'); }}
-            className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 ${
-              currentTab === 'imparo'
-                ? 'text-amber-700 border-amber-500 font-bold'
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Imparo & Video
+            <span>Matemagica</span>
           </button>
 
-          <button
-            onClick={() => { soundManager.playPop(); onSelectTab('minigiochi'); }}
-            className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 ${
-              currentTab === 'minigiochi'
-                ? 'text-amber-700 border-amber-500 font-bold'
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
+          {/* User Requested: Pulsante che invii a scienzalab.vercel.app */}
+          <a
+            href="https://scienzalab.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 rounded-xl text-[11px] font-bold transition-all shadow-2xs hover:scale-102"
+            title="Apri ScienzaLab in una nuova scheda"
           >
-            Minigiochi
-          </button>
+            <FlaskConical className="w-3.5 h-3.5 text-teal-600" />
+            <span className="hidden sm:inline">ScienzaLab</span>
+            <ExternalLink className="w-3 h-3 text-teal-500" />
+          </a>
+        </div>
 
-          <button
-            onClick={() => { soundManager.playPop(); onSelectTab('trofei'); }}
-            className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 ${
-              currentTab === 'trofei'
-                ? 'text-amber-700 border-amber-500 font-bold'
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Trofei & Livelli
-          </button>
-
-          <button
-            onClick={() => { soundManager.playPop(); onSelectTab('classifica'); }}
-            className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 ${
-              currentTab === 'classifica'
-                ? 'text-amber-700 border-amber-500 font-bold'
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Classifica
-          </button>
+        {/* Center: Navigation Links Desktop */}
+        <nav className="hidden xl:flex items-center gap-4 text-xs font-bold text-slate-600 overflow-x-auto">
+          {navItems.map(item => {
+            const isSelected = currentTab === item.tab;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.tab}
+                onClick={() => {
+                  soundManager.playPop();
+                  onSelectTab(item.tab);
+                }}
+                className={`whitespace-nowrap shrink-0 transition-all px-2 py-1.5 rounded-xl flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-amber-100 text-amber-900 font-extrabold shadow-2xs'
+                    : 'hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-600' : 'text-slate-400'}`} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Zone 3: 1 Primary Action (Companion Profile & Customizer Trigger) */}
-        <div className="flex items-center gap-3 shrink-0">
-          {/* Sound Mute Toggle */}
+        {/* Right: Sound, Avatar Profile, Mobile Menu Trigger */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {/* Sound Toggle */}
           <button
             onClick={() => {
               soundManager.playPop();
@@ -109,70 +121,101 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="p-2 text-slate-400 hover:text-amber-600 rounded-xl hover:bg-amber-50 transition-colors"
             title={soundEnabled ? 'Disattiva suoni' : 'Attiva suoni'}
           >
-            {soundEnabled ? <Volume2 className="w-5 h-5 text-amber-600" /> : <VolumeX className="w-5 h-5 text-slate-400" />}
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
           </button>
 
-          {/* Primary Action Button: Companion Avatar Studio */}
+          {/* Avatar Profile Button */}
           <button
             onClick={() => {
               soundManager.playPop();
               onOpenCustomizer();
             }}
-            className="flex items-center gap-2.5 px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl transition-all shadow-xs active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl transition-all shadow-2xs active:scale-95"
             title="Personalizza il tuo Avatar Compagno"
           >
-            <AvatarRenderer config={avatarConfig} size={36} showShadow={false} />
+            <AvatarRenderer config={avatarConfig} size={32} showShadow={false} />
             <div className="text-left hidden sm:block">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-bold text-slate-900 truncate max-w-[90px]">
+                <span className="text-xs font-bold text-slate-900 truncate max-w-[80px]">
                   {avatarConfig.nickname}
                 </span>
-                <span className="text-[10px] bg-amber-200 text-amber-900 px-1.5 py-0.2 rounded-md font-bold">
+                <span className="text-[10px] bg-amber-200 text-amber-900 px-1 py-0.2 rounded font-bold">
                   Lv {userLevel}
                 </span>
               </div>
-              <span className="text-[10px] text-amber-700 font-semibold block">
-                Modifica Avatar
-              </span>
             </div>
-            <Palette className="w-4 h-4 text-amber-600 shrink-0 ml-0.5" />
+            <Palette className="w-3.5 h-3.5 text-amber-600 shrink-0 ml-0.5" />
+          </button>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(prev => !prev)}
+            className="xl:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
       </div>
 
-      {/* Mobile Secondary Navigation Row (clean single line) */}
-      <div className="md:hidden flex items-center justify-around px-2 py-2 border-t border-amber-100 bg-amber-50/70 overflow-x-auto text-xs font-bold text-slate-700">
-        <button
-          onClick={() => { soundManager.playPop(); onSelectTab('esplora'); }}
-          className={`px-2.5 py-1 rounded-lg ${currentTab === 'esplora' ? 'bg-amber-500 text-white' : ''}`}
-        >
-          Esplora
-        </button>
-        <button
-          onClick={() => { soundManager.playPop(); onSelectTab('imparo'); }}
-          className={`px-2.5 py-1 rounded-lg ${currentTab === 'imparo' ? 'bg-amber-500 text-white' : ''}`}
-        >
-          Imparo & Video
-        </button>
-        <button
-          onClick={() => { soundManager.playPop(); onSelectTab('minigiochi'); }}
-          className={`px-2.5 py-1 rounded-lg ${currentTab === 'minigiochi' ? 'bg-amber-500 text-white' : ''}`}
-        >
-          Minigiochi
-        </button>
-        <button
-          onClick={() => { soundManager.playPop(); onSelectTab('trofei'); }}
-          className={`px-2.5 py-1 rounded-lg ${currentTab === 'trofei' ? 'bg-amber-500 text-white' : ''}`}
-        >
-          Trofei
-        </button>
-        <button
-          onClick={() => { soundManager.playPop(); onSelectTab('classifica'); }}
-          className={`px-2.5 py-1 rounded-lg ${currentTab === 'classifica' ? 'bg-amber-500 text-white' : ''}`}
-        >
-          Classifica
-        </button>
+      {/* Mobile Drawer / Secondary Row */}
+      {mobileMenuOpen && (
+        <div className="xl:hidden bg-white border-t border-amber-100 p-4 space-y-2 animate-fade-in shadow-lg">
+          <div className="grid grid-cols-2 gap-2">
+            {navItems.map(item => {
+              const isSelected = currentTab === item.tab;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.tab}
+                  onClick={() => {
+                    soundManager.playPop();
+                    onSelectTab(item.tab);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`p-2.5 rounded-xl text-xs font-bold transition-all text-left flex items-center gap-2 ${
+                    isSelected
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-slate-50 text-slate-700 hover:bg-amber-50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <a
+              href="https://scienzalab.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-bold text-teal-700 flex items-center gap-1.5"
+            >
+              <FlaskConical className="w-4 h-4" />
+              <span>Visita scienzalab.vercel.app ↗</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop secondary quick bar for smaller screens */}
+      <div className="hidden md:flex xl:hidden items-center gap-2 px-4 py-2 border-t border-amber-100 bg-amber-50/50 overflow-x-auto text-xs font-bold text-slate-700">
+        {navItems.map(item => (
+          <button
+            key={item.tab}
+            onClick={() => {
+              soundManager.playPop();
+              onSelectTab(item.tab);
+            }}
+            className={`px-3 py-1 rounded-lg shrink-0 whitespace-nowrap ${
+              currentTab === item.tab ? 'bg-amber-500 text-white' : 'hover:bg-amber-100/60'
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
     </header>
   );

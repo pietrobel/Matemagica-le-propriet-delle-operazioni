@@ -1,105 +1,36 @@
 import React, { useState } from 'react';
 import { GameScoreResult } from '../../types/math';
 import { soundManager } from '../../utils/audio';
-import { Scissors, Sparkles, Check, Flame } from 'lucide-react';
+import { Scissors, Sparkles, Check, Flame, RotateCcw } from 'lucide-react';
+import { generateDistributiveSplitProblem, DistributiveSplitProblem } from '../../utils/proceduralGenerators';
 
 interface DistributiveSplitGameProps {
   onFinishGame: (result: GameScoreResult) => void;
   onExit: () => void;
 }
 
-interface SplitProblem {
-  base: number;
-  large: number;
-  partA: number; // 10
-  partB: number; // 4
-  areaA: number; // base * partA
-  areaB: number; // base * partB
-  total: number;
-  splitChoices: { label: string; partA: number; partB: number; isCorrect: boolean }[];
-  sumChoices: number[];
-}
-
 export const DistributiveSplitGame: React.FC<DistributiveSplitGameProps> = ({
   onFinishGame,
   onExit
 }) => {
+  const [problems, setProblems] = useState<DistributiveSplitProblem[]>(() =>
+    Array.from({ length: 5 }, (_, i) => generateDistributiveSplitProblem(i))
+  );
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [step, setStep] = useState<'split' | 'calculate'>('split');
   const [selectedSplit, setSelectedSplit] = useState<{ partA: number; partB: number } | null>(null);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
-  const problems: SplitProblem[] = [
-    {
-      base: 6,
-      large: 14,
-      partA: 10,
-      partB: 4,
-      areaA: 60,
-      areaB: 24,
-      total: 84,
-      splitChoices: [
-        { label: 'Spacca in 10 + 4', partA: 10, partB: 4, isCorrect: true },
-        { label: 'Spacca in 8 + 6', partA: 8, partB: 6, isCorrect: false },
-        { label: 'Spacca in 12 + 2', partA: 12, partB: 2, isCorrect: false },
-        { label: 'Spacca in 7 + 7', partA: 7, partB: 7, isCorrect: false },
-        { label: 'Spacca in 11 + 3', partA: 11, partB: 3, isCorrect: false }
-      ],
-      sumChoices: [84, 74, 94, 88, 82, 64]
-    },
-    {
-      base: 7,
-      large: 12,
-      partA: 10,
-      partB: 2,
-      areaA: 70,
-      areaB: 14,
-      total: 84,
-      splitChoices: [
-        { label: 'Spacca in 10 + 2', partA: 10, partB: 2, isCorrect: true },
-        { label: 'Spacca in 6 + 6', partA: 6, partB: 6, isCorrect: false },
-        { label: 'Spacca in 8 + 4', partA: 8, partB: 4, isCorrect: false },
-        { label: 'Spacca in 9 + 3', partA: 9, partB: 3, isCorrect: false },
-        { label: 'Spacca in 11 + 1', partA: 11, partB: 1, isCorrect: false }
-      ],
-      sumChoices: [84, 82, 94, 78, 86, 74]
-    },
-    {
-      base: 8,
-      large: 15,
-      partA: 10,
-      partB: 5,
-      areaA: 80,
-      areaB: 40,
-      total: 120,
-      splitChoices: [
-        { label: 'Spacca in 10 + 5', partA: 10, partB: 5, isCorrect: true },
-        { label: 'Spacca in 9 + 6', partA: 9, partB: 6, isCorrect: false },
-        { label: 'Spacca in 8 + 7', partA: 8, partB: 7, isCorrect: false },
-        { label: 'Spacca in 12 + 3', partA: 12, partB: 3, isCorrect: false },
-        { label: 'Spacca in 11 + 4', partA: 11, partB: 4, isCorrect: false }
-      ],
-      sumChoices: [120, 110, 130, 125, 115, 140]
-    },
-    {
-      base: 9,
-      large: 13,
-      partA: 10,
-      partB: 3,
-      areaA: 90,
-      areaB: 27,
-      total: 117,
-      splitChoices: [
-        { label: 'Spacca in 10 + 3', partA: 10, partB: 3, isCorrect: true },
-        { label: 'Spacca in 8 + 5', partA: 8, partB: 5, isCorrect: false },
-        { label: 'Spacca in 7 + 6', partA: 7, partB: 6, isCorrect: false },
-        { label: 'Spacca in 11 + 2', partA: 11, partB: 2, isCorrect: false },
-        { label: 'Spacca in 9 + 4', partA: 9, partB: 4, isCorrect: false }
-      ],
-      sumChoices: [117, 107, 127, 113, 123, 103]
-    }
-  ];
+  const handleRestartNewNumbers = () => {
+    soundManager.playPop();
+    setProblems(Array.from({ length: 5 }, (_, i) => generateDistributiveSplitProblem(i)));
+    setRound(0);
+    setScore(0);
+    setStep('split');
+    setSelectedSplit(null);
+    setFeedback(null);
+  };
 
   const current = problems[round] || problems[0];
   const totalRounds = problems.length;
@@ -174,6 +105,14 @@ export const DistributiveSplitGame: React.FC<DistributiveSplitGameProps> = ({
             <span className="text-[10px] uppercase font-bold text-slate-400">Punti</span>
             <p className="text-base font-black text-purple-600 font-mono-numbers">{score}</p>
           </div>
+          <button
+            onClick={handleRestartNewNumbers}
+            title="Genera nuova partita con numeri procedurali diversi"
+            className="flex items-center gap-1 text-xs font-semibold text-purple-700 hover:text-purple-800 px-3 py-1 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Nuova Partita</span>
+          </button>
           <button
             onClick={() => { soundManager.playPop(); onExit(); }}
             className="text-xs font-semibold text-slate-400 hover:text-slate-600 px-3 py-1 bg-slate-100 rounded-lg"

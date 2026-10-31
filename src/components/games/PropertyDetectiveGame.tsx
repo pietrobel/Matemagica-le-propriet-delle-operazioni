@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { GameScoreResult } from '../../types/math';
 import { soundManager } from '../../utils/audio';
-import { ShieldCheck, Sparkles, Timer, Flame, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Sparkles, Timer, Flame, CheckCircle2, RotateCcw } from 'lucide-react';
+import { generateDetectiveQuestion, DetectiveQuestionInstance } from '../../utils/proceduralGenerators';
 
 interface PropertyDetectiveGameProps {
   onFinishGame: (result: GameScoreResult) => void;
   onExit: () => void;
 }
 
-interface DetectiveQuestion {
-  prompt: string;
-  equation: string;
-  correctAnswer: string;
-  choices: string[];
-  explanation: string;
-}
-
 export const PropertyDetectiveGame: React.FC<PropertyDetectiveGameProps> = ({
   onFinishGame,
   onExit
 }) => {
+  const [questions, setQuestions] = useState<DetectiveQuestionInstance[]>(() =>
+    Array.from({ length: 8 }, (_, i) => generateDetectiveQuestion(i))
+  );
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -27,84 +23,16 @@ export const PropertyDetectiveGame: React.FC<PropertyDetectiveGameProps> = ({
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
-  const questions: DetectiveQuestion[] = [
-    {
-      prompt: 'Quale proprietà è stata usata per fare questo scambio?',
-      equation: '18 + 35 = 35 + 18',
-      correctAnswer: 'Proprietà Commutativa',
-      choices: ['Proprietà Commutativa', 'Proprietà Associativa', 'Proprietà Invariantiva', 'Proprietà Distributiva'],
-      explanation: 'I numeri sono stati scambiati di posto: l\'ordine degli addendi non cambia la somma!'
-    },
-    {
-      prompt: 'Quale proprietà ha permesso di raggruppare i primi due numeri?',
-      equation: '(25 + 75) + 14 = 100 + 14 = 114',
-      correctAnswer: 'Proprietà Associativa',
-      choices: ['Proprietà Distributiva', 'Proprietà Associativa', 'Proprietà Commutativa', 'Elemento Neutro'],
-      explanation: 'Abbiamo associato 25 e 75 per fare 100!'
-    },
-    {
-      prompt: 'Quale magica proprietà ha aggiunto +2 a entrambi i lati?',
-      equation: '68 - 28 = 70 - 30 = 40',
-      correctAnswer: 'Proprietà Invariantiva',
-      choices: ['Proprietà Commutativa', 'Proprietà Invariantiva', 'Proprietà Associativa (in forma dissociativa)', 'Proprietà Distributiva'],
-      explanation: 'Aggiungendo lo stesso numero a minuendo e sottraendo la differenza non cambia!'
-    },
-    {
-      prompt: 'Quale proprietà ha distribuito il 5 su entrambi i pezzi?',
-      equation: '5 × (10 + 6) = (5 × 10) + (5 × 6)',
-      correctAnswer: 'Proprietà Distributiva',
-      choices: ['Proprietà Invariantiva', 'Proprietà Associativa', 'Proprietà Distributiva', 'Proprietà Commutativa'],
-      explanation: 'Il 5 è stato distribuito sul 10 e sul 6!'
-    },
-    {
-      prompt: 'Attenzione al trabocchetto! Quale affermazione è FALSA?',
-      equation: '12 - 5 = 5 - 12',
-      correctAnswer: 'È falsa: la sottrazione NON è commutativa!',
-      choices: [
-        'È vera: vale la commutativa',
-        'È falsa: la sottrazione NON è commutativa!',
-        'È vera per la proprietà invariantiva',
-        'È vera con lo zero'
-      ],
-      explanation: 'Nella sottrazione l\'ordine è fondamentale! 12 - 5 fa 7, non 5 - 12!'
-    },
-    {
-      prompt: 'Perché 42 × 1 fa sempre 42?',
-      equation: '42 × 1 = 42',
-      correctAnswer: '1 è l\'Elemento Neutro della moltiplicazione',
-      choices: [
-        '1 è l\'Elemento Neutro della moltiplicazione',
-        'Per la proprietà Invariantiva',
-        'Perché 1 è un fattore speciale',
-        'Per la proprietà Distributiva'
-      ],
-      explanation: 'L\'1 è lo specchio della moltiplicazione: lascia qualsiasi numero invariato!'
-    },
-    {
-      prompt: 'Quale proprietà ha tolto lo zero a entrambi i numeri?',
-      equation: '180 ÷ 30 = 18 ÷ 3 = 6',
-      correctAnswer: 'Proprietà Invariantiva della divisione',
-      choices: [
-        'Proprietà Invariantiva della divisione',
-        'Proprietà Distributiva a destra',
-        'Proprietà Commutativa',
-        'Proprietà Associativa'
-      ],
-      explanation: 'Dividendo entrambi i termini per 10 il quoziente non cambia!'
-    },
-    {
-      prompt: 'Attenzione alle regole segrete: quanto fa 8 ÷ 0?',
-      equation: '8 ÷ 0 = ?',
-      correctAnswer: 'È IMPOSSIBILE: non si può mai dividere per zero!',
-      choices: [
-        'È IMPOSSIBILE: non si può mai dividere per zero!',
-        'Fa 0 per la proprietà dello zero',
-        'Fa 8 perché lo zero non conta',
-        'Fa 1 per l\'elemento neutro'
-      ],
-      explanation: 'La divisione per zero non ha senso logico ed è assolutamente impossibile!'
-    }
-  ];
+  const handleRestartNewNumbers = () => {
+    soundManager.playPop();
+    setQuestions(Array.from({ length: 8 }, (_, i) => generateDetectiveQuestion(i)));
+    setRound(0);
+    setScore(0);
+    setStreak(0);
+    setTimeLeft(15);
+    setSelectedChoice(null);
+    setFeedback(null);
+  };
 
   const totalRounds = questions.length;
   const current = questions[round] || questions[0];
@@ -195,6 +123,14 @@ export const PropertyDetectiveGame: React.FC<PropertyDetectiveGameProps> = ({
             <span className="text-[10px] uppercase font-bold text-slate-400">Punti</span>
             <p className="text-base font-black text-amber-600 font-mono-numbers">{score}</p>
           </div>
+          <button
+            onClick={handleRestartNewNumbers}
+            title="Genera nuova partita con numeri procedurali diversi"
+            className="flex items-center gap-1 text-xs font-semibold text-amber-800 hover:text-amber-900 px-3 py-1 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Nuova Partita</span>
+          </button>
           <button
             onClick={() => { soundManager.playPop(); onExit(); }}
             className="text-xs font-semibold text-slate-400 hover:text-slate-600 px-3 py-1 bg-slate-100 rounded-lg"

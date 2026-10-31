@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AvatarConfig } from '../../types/math';
 import { AvatarRenderer } from '../avatar/AvatarRenderer';
 import { soundManager } from '../../utils/audio';
-import { ALL_PROPERTY_QUIZ_QUESTIONS, PropertyQuizQuestion } from '../../data/propertyQuizData';
+import { ALL_PROPERTY_QUIZ_QUESTIONS, PropertyQuizQuestion, generatePropertyQuizQuestions } from '../../data/propertyQuizData';
 import { 
   Zap, 
   Sparkles, 
@@ -28,6 +28,7 @@ export const QuickQuizWidget: React.FC<QuickQuizWidgetProps> = ({
   onGoToGames,
   onQuizAnsweredCorrectly
 }) => {
+  const [quizQuestions, setQuizQuestions] = useState<PropertyQuizQuestion[]>(() => generatePropertyQuizQuestions());
   const [selectedOperation, setSelectedOperation] = useState<'Tutte' | 'Addizione' | 'Sottrazione' | 'Moltiplicazione' | 'Divisione'>('Tutte');
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -37,8 +38,8 @@ export const QuickQuizWidget: React.FC<QuickQuizWidgetProps> = ({
 
   // Filter questions based on selected operation
   const filteredQuestions = selectedOperation === 'Tutte'
-    ? ALL_PROPERTY_QUIZ_QUESTIONS
-    : ALL_PROPERTY_QUIZ_QUESTIONS.filter(q => q.operation === selectedOperation);
+    ? quizQuestions
+    : quizQuestions.filter(q => q.operation === selectedOperation);
 
   const currentQ: PropertyQuizQuestion = filteredQuestions[questionIndex % filteredQuestions.length] || filteredQuestions[0];
 

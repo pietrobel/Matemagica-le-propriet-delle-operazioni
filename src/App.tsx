@@ -5,25 +5,32 @@ import {
   GameScoreResult, 
   LeaderboardEntry,
   DailyMission,
-  OperationType 
+  OperationType,
+  MainTab,
+  LoggedError
 } from './types/math';
 import { INITIAL_BADGES, INITIAL_LEADERBOARD, LEVEL_TITLES } from './data/mathRules';
 import { generateDailyMissions } from './data/dailyMissionsData';
 import { Navbar } from './components/Navbar';
 import { HomeExploreSection } from './components/home/HomeExploreSection';
+import { TextbookSection } from './components/learn/TextbookSection';
 import { LearnSection } from './components/learn/LearnSection';
+import { GuidedPracticeSection } from './components/practice/GuidedPracticeSection';
 import { MinigamesHub } from './components/games/MinigamesHub';
+import { FinalAssessmentSection } from './components/assessment/FinalAssessmentSection';
+import { ReviewSection } from './components/review/ReviewSection';
+import { NeutralAbsorbingSection } from './components/neutral/NeutralAbsorbingSection';
 import { TrophiesSection } from './components/trophies/TrophiesSection';
 import { LeaderboardSection } from './components/leaderboard/LeaderboardSection';
 import { AvatarCustomizerModal } from './components/avatar/AvatarCustomizerModal';
 import { soundManager } from './utils/audio';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, FlaskConical, ExternalLink } from 'lucide-react';
 
 const STORAGE_KEY_AVATAR = 'matemagica_avatar_v1';
-const STORAGE_KEY_STATS = 'matemagica_stats_v1';
 const STORAGE_KEY_BADGES = 'matemagica_badges_v1';
 const STORAGE_KEY_MISSIONS = 'matemagica_daily_missions_v2';
 const STORAGE_KEY_MISSIONS_DATE = 'matemagica_daily_date_v2';
+const STORAGE_KEY_ERRORS = 'matemagica_logged_errors_v1';
 
 const DEFAULT_AVATAR: AvatarConfig = {
   archetype: 'fox',
@@ -38,7 +45,7 @@ const DEFAULT_AVATAR: AvatarConfig = {
 };
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<'esplora' | 'imparo' | 'minigiochi' | 'trofei' | 'classifica'>('esplora');
+  const [currentTab, setCurrentTab] = useState<MainTab>('home');
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [learnOpFilter, setLearnOpFilter] = useState<OperationType>('addizione');
@@ -57,15 +64,56 @@ export default function App() {
   });
 
   // Progression stats
-  const [xp, setXp] = useState(650);
-  const [stars, setStars] = useState(14);
+  const [xp, setXp] = useState(750);
+  const [stars, setStars] = useState(16);
   const [level, setLevel] = useState(2);
   const [gameStats, setGameStats] = useState<{ [gameId: string]: { highscore: number; plays: number; stars: number } }>({
     swap_master: { highscore: 380, plays: 2, stars: 2 },
     invariant_balance: { highscore: 250, plays: 1, stars: 1 },
     distributive_split: { highscore: 0, plays: 0, stars: 0 },
-    property_detective: { highscore: 0, plays: 0, stars: 0 }
+    property_detective: { highscore: 0, plays: 0, stars: 0 },
+    number_lab: { highscore: 0, plays: 0, stars: 0 },
+    error_hunter: { highscore: 0, plays: 0, stars: 0 },
+    property_match: { highscore: 0, plays: 0, stars: 0 },
+    mental_math_speed: { highscore: 0, plays: 0, stars: 0 },
+    escape_room: { highscore: 0, plays: 0, stars: 0 },
+    property_tournament: { highscore: 0, plays: 0, stars: 0 }
   });
+
+  // Logged errors vault for the Review section
+  const [loggedErrors, setLoggedErrors] = useState<LoggedError[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_ERRORS);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleLogError = (err: LoggedError) => {
+    setLoggedErrors(prev => {
+      // Avoid exact duplicates
+      const exists = prev.some(e => e.question === err.question && e.givenAnswer === err.givenAnswer);
+      if (exists) return prev;
+      const updated = [err, ...prev].slice(0, 50);
+      try {
+        localStorage.setItem(STORAGE_KEY_ERRORS, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const handleClearErrors = () => {
+    setLoggedErrors([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY_ERRORS);
+    } catch {}
+    setToastMessage({
+      title: 'Registro Errori Svuotato',
+      desc: 'Tutte le lacune sono state azzerate per un nuovo ciclo di studio!'
+    });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   // Badges
   const [badges, setBadges] = useState<Badge[]>(() => {
@@ -94,7 +142,7 @@ export default function App() {
     }
   });
 
-  // Toast notification for unlock / level up
+  // Toast notification
   const [toastMessage, setToastMessage] = useState<{ title: string; desc: string } | null>(null);
 
   // Sync sound settings
@@ -126,12 +174,10 @@ export default function App() {
         if (mission.isCompleted) return mission;
         if (mission.category !== category) return mission;
 
-        // If mission has specificFilter, check if matches
         if (mission.specificFilter && filter && mission.specificFilter !== filter) {
           return mission;
         }
 
-        // Special check for score_50 mission: amount is the score achieved
         if (mission.templateId === 'mission_score_50') {
           if (amount < 50) return mission;
           const newCount = 50;
@@ -186,7 +232,6 @@ export default function App() {
 
       const updated = prev.map(m => m.id === missionId ? { ...m, isClaimed: true } : m);
       
-      // Check if all 3 are claimed
       const allClaimedNow = updated.every(m => m.isClaimed);
       if (allClaimedNow) {
         setTimeout(() => {
@@ -215,7 +260,7 @@ export default function App() {
     });
   };
 
-  // Reset daily missions (for testing or extra practice)
+  // Reset daily missions
   const handleResetDailyMissions = () => {
     const fresh = generateDailyMissions(`${todayDateStr}_${Date.now()}`);
     setDailyMissions(fresh);
@@ -236,7 +281,6 @@ export default function App() {
       localStorage.setItem(STORAGE_KEY_AVATAR, JSON.stringify(newConfig));
     } catch {}
 
-    // Unlock stylist badge if not unlocked
     unlockBadge('badge_stylist');
     progressDailyMission('avatar', 1);
 
@@ -280,7 +324,6 @@ export default function App() {
       };
     });
 
-    // Check unlocks based on game played
     if (result.gameId === 'swap_master') {
       unlockBadge('badge_first_swap');
     } else if (result.gameId === 'invariant_balance') {
@@ -293,7 +336,6 @@ export default function App() {
       unlockBadge('badge_streak_master');
     }
 
-    // Progress daily missions
     progressDailyMission('game', result.score, 'score_50');
     progressDailyMission('game', 1, result.gameId);
     progressDailyMission('game', 1);
@@ -306,23 +348,16 @@ export default function App() {
       unlockBadge('badge_associative_star');
     }
 
-    // Progress daily missions
     progressDailyMission('learn', 1, 'video');
-    if (lessonId.includes('distributiva') || lessonId.includes('moltiplicazione')) {
-      progressDailyMission('learn', 1, 'moltiplicazione');
-    } else if (lessonId.includes('commutativa') || lessonId.includes('associativa')) {
-      progressDailyMission('learn', 1, 'addizione');
-    } else if (lessonId.includes('invariante') || lessonId.includes('invariantiva')) {
-      progressDailyMission('learn', 1, 'sottrazione');
-    }
   };
 
-  // Handle navigation from widgets
-  const handleNavigate = (tab: 'esplora' | 'imparo' | 'minigiochi' | 'trofei' | 'classifica', filter?: string) => {
+  const handleNavigate = (tab: MainTab, filter?: string) => {
+    soundManager.playPop();
     setCurrentTab(tab);
-    if (tab === 'imparo' && filter && (filter === 'addizione' || filter === 'sottrazione' || filter === 'moltiplicazione' || filter === 'divisione')) {
+    if (tab === 'guardo' && filter && (filter === 'addizione' || filter === 'sottrazione' || filter === 'moltiplicazione' || filter === 'divisione')) {
       setLearnOpFilter(filter as OperationType);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Current user entry for leaderboard
@@ -341,7 +376,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-amber-50/40 text-slate-900 selection:bg-amber-200">
       
-      {/* 3-Zone Top Bar Navigation */}
+      {/* Navbar with ScienzaLab button and 6 distinct sections */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -353,9 +388,10 @@ export default function App() {
         onToggleSound={() => setSoundEnabled(prev => !prev)}
       />
 
-      {/* Main App Content Viewport */}
+      {/* Main Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {currentTab === 'esplora' && (
+        {/* Schermata Iniziale / Home */}
+        {currentTab === 'home' && (
           <HomeExploreSection
             avatarConfig={avatar}
             userLevel={level}
@@ -371,32 +407,102 @@ export default function App() {
               setXp(prev => prev + bonusXp);
               setToastMessage({
                 title: 'Bonus Quiz Rapido Riscattato!',
-                desc: `Hai guadagnato +${bonusXp} XP per aver riconosciuto la proprietà!`
+                desc: `Hai guadagnato +${bonusXp} XP!`
               });
               setTimeout(() => setToastMessage(null), 4000);
             }}
           />
         )}
 
+        {/* 1. IMPARO – Libro di Testo Interattivo */}
         {currentTab === 'imparo' && (
+          <TextbookSection
+            onGoToVideo={() => setCurrentTab('guardo')}
+            onGoToPractice={() => setCurrentTab('esercito')}
+            onAwardXp={(bonus) => {
+              setXp(prev => prev + bonus);
+              setToastMessage({
+                title: 'Mini-Verifica Capitolo Superata!',
+                desc: `+${bonus} XP guadagnati!`
+              });
+              setTimeout(() => setToastMessage(null), 3500);
+            }}
+          />
+        )}
+
+        {/* 2. GUARDO – Videolezioni Animate */}
+        {currentTab === 'guardo' && (
           <LearnSection
             onCompleteLesson={handleCompleteLesson}
-            onOpenGame={() => setCurrentTab('minigiochi')}
+            onOpenGame={() => setCurrentTab('gioco')}
             initialOperation={learnOpFilter}
             onExploreOperation={(op) => progressDailyMission('learn', 1, op)}
           />
         )}
 
-        {currentTab === 'minigiochi' && (
+        {/* 3. MI ESERCITO – Palestra >100 Esercizi */}
+        {currentTab === 'esercito' && (
+          <GuidedPracticeSection
+            avatarConfig={avatar}
+            onAwardXp={(amount) => setXp(prev => prev + amount)}
+            onGoHome={() => setCurrentTab('home')}
+            onGoToGames={() => setCurrentTab('gioco')}
+            onGoToTheory={() => setCurrentTab('imparo')}
+            onLogError={handleLogError}
+          />
+        )}
+
+        {/* 4. GIOCO – 6 Giochi Didattici Interattivi */}
+        {currentTab === 'gioco' && (
           <MinigamesHub
             avatarConfig={avatar}
             userLevel={level}
             gameStats={gameStats}
             onRecordGameResult={handleRecordGameResult}
             onNavigateToTrophies={() => setCurrentTab('trofei')}
+            onGoHome={() => setCurrentTab('home')}
+            onGoToTheory={() => setCurrentTab('imparo')}
+            onGoToVerification={() => setCurrentTab('prova')}
           />
         )}
 
+        {/* 5. MI METTO ALLA PROVA – Verifica Ufficiale 30 Domande */}
+        {currentTab === 'prova' && (
+          <FinalAssessmentSection
+            avatarConfig={avatar}
+            onAwardXp={(amount) => setXp(prev => prev + amount)}
+            onGoHome={() => setCurrentTab('home')}
+            onGoToReview={() => setCurrentTab('ripasso')}
+            onGoToTheory={() => setCurrentTab('imparo')}
+            onLogError={handleLogError}
+          />
+        )}
+
+        {/* 6. RIPASSO – Schemi Riassuntivi e Registro Errori */}
+        {currentTab === 'ripasso' && (
+          <ReviewSection
+            avatarConfig={avatar}
+            loggedErrors={loggedErrors}
+            onClearErrors={handleClearErrors}
+            onGoToTheory={() => setCurrentTab('imparo')}
+            onGoToPractice={() => setCurrentTab('esercito')}
+            onGoHome={() => setCurrentTab('home')}
+          />
+        )}
+
+        {/* Sezione Autonoma: Elementi Neutri ed Assorbenti (0 e 1) */}
+        {currentTab === 'neutri' && (
+          <NeutralAbsorbingSection
+            avatarConfig={avatar}
+            onAwardXp={(amount) => setXp(prev => prev + amount)}
+            onGoHome={() => setCurrentTab('home')}
+            onGoToGames={() => setCurrentTab('gioco')}
+            onGoToTheory={() => setCurrentTab('imparo')}
+            onLogError={handleLogError}
+          />
+        )}
+
+        {/* Trofei & Livelli */}
         {currentTab === 'trofei' && (
           <TrophiesSection
             badges={badges}
@@ -408,11 +514,12 @@ export default function App() {
           />
         )}
 
+        {/* Classifica */}
         {currentTab === 'classifica' && (
           <LeaderboardSection
             currentUserEntry={currentUserEntry}
             classmates={INITIAL_LEADERBOARD}
-            onChallengeFriend={() => setCurrentTab('minigiochi')}
+            onChallengeFriend={() => setCurrentTab('gioco')}
             onOpenCustomizer={() => setIsCustomizerOpen(true)}
           />
         )}
@@ -431,7 +538,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Character Customizer Studio Modal */}
+      {/* Avatar Studio Modal */}
       <AvatarCustomizerModal
         isOpen={isCustomizerOpen}
         onClose={() => setIsCustomizerOpen(false)}
@@ -440,17 +547,26 @@ export default function App() {
         userLevel={level}
       />
 
-      {/* Clean Footer */}
+      {/* Clean Footer with ScienzaLab Link */}
       <footer className="mt-16 bg-white border-t border-amber-200/80 py-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div>
             <p className="font-bold text-slate-800">Matemagica: Il Regno delle Proprietà</p>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Progettato per la scuola primaria per scoprire le proprietà delle 4 operazioni aritmetiche.
+              Ambiente di apprendimento per giovani matematici della scuola secondaria di primo grado (60-90 minuti).
             </p>
           </div>
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
-            <span>Addizione · Sottrazione · Moltiplicazione · Divisione</span>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-600">
+            <a
+              href="https://scienzalab.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-200 transition-colors"
+            >
+              <FlaskConical className="w-3.5 h-3.5 text-teal-600" />
+              <span>Visita ScienzaLab (scienzalab.vercel.app) ↗</span>
+            </a>
           </div>
         </div>
       </footer>

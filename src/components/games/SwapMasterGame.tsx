@@ -18,6 +18,8 @@ interface Question {
   choices: number[];
 }
 
+import { generateSwapMasterRound } from '../../utils/proceduralGenerators';
+
 export const SwapMasterGame: React.FC<SwapMasterGameProps> = ({
   onFinishGame,
   onExit
@@ -30,63 +32,10 @@ export const SwapMasterGame: React.FC<SwapMasterGameProps> = ({
 
   const totalRounds = 6;
 
-  // 6 rounds with crystal-clear commutative equations
-  const questions: Question[] = [
-    { 
-      type: '+', 
-      a: 8, 
-      b: 15, 
-      missingSlot: 'first', 
-      expectedValue: 15, 
-      result: 23, 
-      choices: [15, 8, 23, 7, 16, 14] 
-    },
-    { 
-      type: '×', 
-      a: 6, 
-      b: 7, 
-      missingSlot: 'second', 
-      expectedValue: 6, 
-      result: 42, 
-      choices: [6, 7, 42, 13, 14, 1] 
-    },
-    { 
-      type: '+', 
-      a: 34, 
-      b: 19, 
-      missingSlot: 'first', 
-      expectedValue: 19, 
-      result: 53, 
-      choices: [19, 34, 53, 15, 20, 18] 
-    },
-    { 
-      type: '×', 
-      a: 9, 
-      b: 4, 
-      missingSlot: 'first', 
-      expectedValue: 4, 
-      result: 36, 
-      choices: [4, 9, 36, 13, 5, 8] 
-    },
-    { 
-      type: '+', 
-      a: 47, 
-      b: 23, 
-      missingSlot: 'second', 
-      expectedValue: 47, 
-      result: 70, 
-      choices: [47, 23, 70, 24, 22, 60] 
-    },
-    { 
-      type: '×', 
-      a: 12, 
-      b: 5, 
-      missingSlot: 'second', 
-      expectedValue: 12, 
-      result: 60, 
-      choices: [12, 5, 60, 17, 10, 6] 
-    }
-  ];
+  // Generazione procedurale dinamica a ogni nuova partita
+  const [questions, setQuestions] = useState<Question[]>(() => {
+    return [0, 1, 2, 3, 4, 5].map(r => generateSwapMasterRound(r));
+  });
 
   const q = questions[currentRound] || questions[0];
 

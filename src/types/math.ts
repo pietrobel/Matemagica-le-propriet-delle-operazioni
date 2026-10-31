@@ -160,3 +160,122 @@ export interface DailyMission {
   unitLabel?: string;
   specificFilter?: string; // e.g. 'moltiplicazione', 'swap_master', etc.
 }
+
+export type MainTab = 
+  | 'home' 
+  | 'imparo' 
+  | 'guardo' 
+  | 'esercito' 
+  | 'gioco' 
+  | 'prova' 
+  | 'ripasso' 
+  | 'neutri' 
+  | 'trofei' 
+  | 'classifica';
+
+// Mini esercizi interattivi per capitolo del libro di testo
+export interface MiniCheckExercise {
+  id: string;
+  question: string;
+  promptEquation?: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+// Esempio svolto per capitolo
+export interface WorkedExample {
+  title: string;
+  initialEquation: string;
+  steps: { stepNumber: number; text: string; mathExpression: string }[];
+  resultExplanation: string;
+  practicalTip: string;
+}
+
+// Capitolo del libro di testo interattivo
+export interface TextbookChapter {
+  id: number;
+  title: string;
+  subtitle: string;
+  operationCategory: 'addizione' | 'moltiplicazione' | 'sottrazione' | 'divisione' | 'neutri_assorbenti';
+  introduction: string;
+  generalRuleBox: {
+    ruleName: string;
+    verbalRule: string;
+    algebraicFormula: string;
+    conditionNote?: string;
+  };
+  workedExamples: WorkedExample[];
+  practicalApplication: {
+    whyItMatters: string;
+    mentalMathSecret: string;
+    realLifeScenario: string;
+  };
+  miniChecks: MiniCheckExercise[];
+}
+
+// Tipi per i 100+ esercizi guidati
+export type ExerciseLevel = 1 | 2 | 3; // 1: facile, 2: intermedio, 3: avanzato
+export type ExerciseType = 
+  | 'completa_operazione'
+  | 'trova_risultato'
+  | 'scegli_trasformazione'
+  | 'calcolo_mentale'
+  | 'trova_errore'
+  | 'abbina'
+  | 'vero_falso'
+  | 'completa_procedimento'
+  | 'problema';
+
+export interface GuidedExercise {
+  id: string;
+  level: ExerciseLevel;
+  type: ExerciseType;
+  property: 'commutativa' | 'associativa' | 'distributiva' | 'invariantiva' | 'neutri_assorbenti';
+  operation: OperationType;
+  question: string;
+  equationDisplay?: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+  hint: string;
+  xpReward: number;
+}
+
+// Registro errori per la sezione Ripasso
+export interface LoggedError {
+  id: string;
+  timestamp: number;
+  exerciseTitle: string;
+  question: string;
+  givenAnswer: string;
+  correctAnswer: string;
+  explanation: string;
+  property: string;
+  sectionSource: 'esercito' | 'gioco' | 'prova' | 'neutri';
+}
+
+// Escape room
+export interface EscapePuzzle {
+  id: string;
+  puzzleTitle: string;
+  riddleText: string;
+  equation: string;
+  hint: string;
+  options: string[];
+  correctAnswer: string;
+  codeDigit: number; // una cifra del codice finale
+  explanation: string;
+}
+
+export interface EscapeRoom {
+  id: number;
+  name: string;
+  theme: string;
+  description: string;
+  color: string;
+  requiredProperty: string;
+  puzzles: EscapePuzzle[];
+  unlockedVaultDigit?: number;
+}
+

@@ -1,132 +1,36 @@
 import React, { useState } from 'react';
 import { GameScoreResult } from '../../types/math';
 import { soundManager } from '../../utils/audio';
-import { Scale, Check, Sparkles, Zap } from 'lucide-react';
+import { Scale, Check, Sparkles, Zap, RotateCcw } from 'lucide-react';
+import { generateInvariantProblem, InvariantProblemInstance } from '../../utils/proceduralGenerators';
 
 interface InvariantBalanceGameProps {
   onFinishGame: (result: GameScoreResult) => void;
   onExit: () => void;
 }
 
-interface InvariantProblem {
-  kind: 'sub' | 'div';
-  originalA: number;
-  originalB: number;
-  bestDelta: number; // e.g. +1
-  bestExplanation: string;
-  transformedA: number;
-  transformedB: number;
-  finalAnswer: number;
-  strategyChoices: {
-    label: string;
-    isCorrect: boolean;
-    transformedText: string;
-  }[];
-  resultChoices: number[];
-}
-
 export const InvariantBalanceGame: React.FC<InvariantBalanceGameProps> = ({
   onFinishGame,
   onExit
 }) => {
+  const [problems, setProblems] = useState<InvariantProblemInstance[]>(() => 
+    Array.from({ length: 6 }, (_, i) => generateInvariantProblem(i))
+  );
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [stage, setStage] = useState<'pick_trick' | 'solve_easy'>('pick_trick');
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
-  const problems: InvariantProblem[] = [
-    {
-      kind: 'sub',
-      originalA: 73,
-      originalB: 29,
-      bestDelta: 1,
-      bestExplanation: '+1 a entrambi (29 diventa un comodissimo 30!)',
-      transformedA: 74,
-      transformedB: 30,
-      finalAnswer: 44,
-      strategyChoices: [
-        { label: '+1 a entrambi (29 diventa 30)', isCorrect: true, transformedText: '74 - 30' },
-        { label: '+2 a entrambi (29 diventa 31)', isCorrect: false, transformedText: '75 - 31' },
-        { label: '-9 a entrambi (29 diventa 20)', isCorrect: false, transformedText: '64 - 20' },
-        { label: '-1 a entrambi (29 diventa 28)', isCorrect: false, transformedText: '72 - 28' },
-        { label: '+11 a entrambi (29 diventa 40)', isCorrect: false, transformedText: '84 - 40' }
-      ],
-      resultChoices: [44, 45, 54, 34, 46, 53]
-    },
-    {
-      kind: 'sub',
-      originalA: 55,
-      originalB: 18,
-      bestDelta: 2,
-      bestExplanation: '+2 a entrambi (18 diventa 20!)',
-      transformedA: 57,
-      transformedB: 20,
-      finalAnswer: 37,
-      strategyChoices: [
-        { label: '+2 a entrambi (18 diventa 20)', isCorrect: true, transformedText: '57 - 20' },
-        { label: '+1 a entrambi (18 diventa 19)', isCorrect: false, transformedText: '56 - 19' },
-        { label: '-8 a entrambi (18 diventa 10)', isCorrect: false, transformedText: '47 - 10' },
-        { label: '+5 a entrambi (55 diventa 60)', isCorrect: false, transformedText: '60 - 23' },
-        { label: '-2 a entrambi (18 diventa 16)', isCorrect: false, transformedText: '53 - 16' }
-      ],
-      resultChoices: [37, 35, 47, 27, 38, 42]
-    },
-    {
-      kind: 'div',
-      originalA: 240,
-      originalB: 40,
-      bestDelta: 10,
-      bestExplanation: 'Dividiamo entrambi per 10 (togliamo lo zero finale!)',
-      transformedA: 24,
-      transformedB: 4,
-      finalAnswer: 6,
-      strategyChoices: [
-        { label: 'Dividi per 10 entrambi (40 diventa 4)', isCorrect: true, transformedText: '24 ÷ 4' },
-        { label: 'Dividi per 2 entrambi (40 diventa 20)', isCorrect: false, transformedText: '120 ÷ 20' },
-        { label: 'Dividi per 4 entrambi (40 diventa 10)', isCorrect: false, transformedText: '60 ÷ 10' },
-        { label: 'Moltiplica per 2 entrambi (40 diventa 80)', isCorrect: false, transformedText: '480 ÷ 80' },
-        { label: 'Togli 40 a entrambi (40 diventa 0)', isCorrect: false, transformedText: '200 ÷ 0' }
-      ],
-      resultChoices: [6, 8, 60, 4, 12, 600]
-    },
-    {
-      kind: 'sub',
-      originalA: 92,
-      originalB: 39,
-      bestDelta: 1,
-      bestExplanation: '+1 a entrambi (39 diventa 40!)',
-      transformedA: 93,
-      transformedB: 40,
-      finalAnswer: 53,
-      strategyChoices: [
-        { label: '+1 a entrambi (39 diventa 40)', isCorrect: true, transformedText: '93 - 40' },
-        { label: '+2 a entrambi (39 diventa 41)', isCorrect: false, transformedText: '94 - 41' },
-        { label: '-9 a entrambi (39 diventa 30)', isCorrect: false, transformedText: '83 - 30' },
-        { label: '+8 a entrambi (92 diventa 100)', isCorrect: false, transformedText: '100 - 47' },
-        { label: '-1 a entrambi (39 diventa 38)', isCorrect: false, transformedText: '91 - 38' }
-      ],
-      resultChoices: [53, 54, 63, 43, 52, 62]
-    },
-    {
-      kind: 'div',
-      originalA: 350,
-      originalB: 50,
-      bestDelta: 10,
-      bestExplanation: 'Togli uno zero a entrambi dividendo per 10: 35 ÷ 5!',
-      transformedA: 35,
-      transformedB: 5,
-      finalAnswer: 7,
-      strategyChoices: [
-        { label: 'Dividi per 10 entrambi (50 diventa 5)', isCorrect: true, transformedText: '35 ÷ 5' },
-        { label: 'Dividi per 5 entrambi (50 diventa 10)', isCorrect: false, transformedText: '70 ÷ 10' },
-        { label: 'Dividi per 2 entrambi (50 diventa 25)', isCorrect: false, transformedText: '175 ÷ 25' },
-        { label: 'Togli 50 a entrambi (50 diventa 0)', isCorrect: false, transformedText: '300 ÷ 0' },
-        { label: 'Moltiplica per 10 entrambi (50 diventa 500)', isCorrect: false, transformedText: '3500 ÷ 500' }
-      ],
-      resultChoices: [7, 70, 5, 8, 35, 14]
-    }
-  ];
+  const handleRestartNewNumbers = () => {
+    soundManager.playPop();
+    setProblems(Array.from({ length: 6 }, (_, i) => generateInvariantProblem(i)));
+    setRound(0);
+    setScore(0);
+    setStreak(0);
+    setStage('pick_trick');
+    setFeedback(null);
+  };
 
   const current = problems[round] || problems[0];
   const totalRounds = problems.length;
@@ -202,6 +106,14 @@ export const InvariantBalanceGame: React.FC<InvariantBalanceGameProps> = ({
             <span className="text-[10px] uppercase font-bold text-slate-400">Punti</span>
             <p className="text-base font-black text-sky-600 font-mono-numbers">{score}</p>
           </div>
+          <button
+            onClick={handleRestartNewNumbers}
+            title="Genera nuova partita con numeri procedurali diversi"
+            className="flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-800 px-3 py-1 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Nuova Partita</span>
+          </button>
           <button
             onClick={() => { soundManager.playPop(); onExit(); }}
             className="text-xs font-semibold text-slate-400 hover:text-slate-600 px-3 py-1 bg-slate-100 rounded-lg"
